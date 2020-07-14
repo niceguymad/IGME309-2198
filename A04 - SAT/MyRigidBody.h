@@ -253,6 +253,9 @@ private:
 	OUTPUT: 0 for colliding, other = first axis that succeeds test
 	*/
 	uint SAT(MyRigidBody* const a_pOther);
+
+	//DAC stands for Dot and Cross
+	float DAC(float value, vector3 dot1, vector3 cross1, vector3 cross2);
 };//class
 
 } //namespace Simplex

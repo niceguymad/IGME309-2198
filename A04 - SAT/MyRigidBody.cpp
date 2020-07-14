@@ -1,3 +1,6 @@
+/*
+	Jared Baker, A04, 
+*/
 #include "MyRigidBody.h"
 using namespace Simplex;
 //Allocation
@@ -6,7 +9,7 @@ void MyRigidBody::Init(void)
 	m_pMeshMngr = MeshManager::GetInstance();
 	m_bVisibleBS = false;
 	m_bVisibleOBB = true;
-	m_bVisibleARBB = false;
+	m_bVisibleARBB = true;
 
 	m_fRadius = 0.0f;
 
@@ -274,19 +277,139 @@ void MyRigidBody::AddToRenderList(void)
 	}
 }
 
+// The checks should work everywhere, except near the top of steves head, when the creeper isn't rotated. I can't find the reason why it did this.
 uint MyRigidBody::SAT(MyRigidBody* const a_pOther)
 {
-	/*
-	Your code goes here instead of this comment;
+	//variables for the plane
+	vector3 planeColor;
+	vector3 planeAngle;
 
-	For this method, if there is an axis that separates the two objects
-	then the return will be different than 0; 1 for any separating axis
-	is ok if you are not going for the extra credit, if you could not
-	find a separating axis you need to return 0, there is an enum in
-	Simplex that might help you [eSATResults] feel free to use it.
-	(eSATResults::SAT_NONE has a value of 0)
-	*/
+	eSATResults results = eSATResults::SAT_NONE;
 
-	//there is no axis test that separates this two objects
-	return eSATResults::SAT_NONE;
+	// center of the two models
+	vector3 centers = a_pOther->GetCenterGlobal() -  this->GetCenterGlobal();
+
+	//Half Measures for this model
+	float lWidth = glm::abs(m_v3MinL.x + GetCenterLocal().x);
+	float lHeight = glm::abs(m_v3MinL.y + GetCenterLocal().y);
+	float lDepth = glm::abs(m_v3MinL.z + GetCenterLocal().z);
+
+	//Axes for this model
+	vector3 localX = this->GetModelMatrix()[0];
+	vector3 localY = this->GetModelMatrix()[1];
+	vector3 localZ = this->GetModelMatrix()[2];
+
+	// half measures for the other model
+	float oWidth = glm::abs(a_pOther->GetMinLocal().x + a_pOther->GetCenterLocal().x);
+	float oHeight = glm::abs(a_pOther->GetMinLocal().y + a_pOther->GetCenterLocal().y);
+	float oDepth = glm::abs(a_pOther->GetMinLocal().z + a_pOther->GetCenterLocal().z);
+
+	// Axes for the other model
+	vector3 otherX = a_pOther->GetModelMatrix()[0];
+	vector3 otherY = a_pOther->GetModelMatrix()[1];
+	vector3 otherZ = a_pOther->GetModelMatrix()[2];
+
+	// These are the 15 checks to see if there is any axis of seperation between the two models
+	if (glm::dot(centers, localX) > lWidth + glm::abs(oWidth * glm::dot(localX, otherX)) + glm::abs(oHeight* glm::dot(otherY, localX)) + glm::abs(oDepth * glm::dot(otherZ, localX)))
+	{
+		results = eSATResults::SAT_AX;
+		planeColor = C_RED;
+		planeAngle = localY;
+	}
+	else if (glm::dot(centers, localY) > lHeight + glm::abs(oWidth * glm::dot(localY, otherX)) + glm::abs(oHeight * glm::dot(otherY, localY)) + glm::abs(oDepth * glm::dot(otherZ, localY)))
+	{
+		results = results = eSATResults::SAT_AY;
+		planeColor = C_GREEN;
+		planeAngle = localX;
+	}
+	else if (glm::dot(centers, localZ) > lDepth + glm::abs(oWidth * glm::dot(localZ, otherX)) + glm::abs(oHeight * glm::dot(otherY, localZ)) + glm::abs(oDepth * glm::dot(otherZ, localZ)))
+	{
+		results = eSATResults::SAT_AZ;
+		planeColor = C_BLUE;
+		planeAngle = localZ;
+	}
+	else if (glm::dot(centers, otherX) > oWidth + glm::abs(lWidth * glm::dot(localX, otherX)) + glm::abs(lHeight * glm::dot(otherX, localY)) + glm::abs(lDepth * glm::dot(otherX, localZ)))
+	{
+		results = eSATResults::SAT_BX;
+		planeColor = C_RED;
+		planeAngle = otherY;
+	}
+	else if (glm::dot(centers, otherY) > oHeight + glm::abs(lWidth * glm::dot(localX, otherY)) + glm::abs(lHeight * glm::dot(otherY, localY)) + glm::abs(lDepth * glm::dot(otherY, localZ)))
+	{
+		results = eSATResults::SAT_BY;
+		planeColor = C_GREEN;
+		planeAngle = otherX;
+	}
+	else if (glm::abs(glm::dot(centers, otherZ)) > oDepth + glm::abs(lWidth * glm::dot(localX, otherZ)) + glm::abs(lHeight * glm::dot(localY, otherZ)) + glm::abs(lDepth * glm::dot(localZ, otherZ)))
+	{
+		results = eSATResults::SAT_BZ;
+		planeColor = C_BLUE;
+		planeAngle = otherZ;
+	}
+	else if (glm::dot(centers, glm::cross(localX, otherX)) > DAC(lHeight, localY, localX, otherX) + DAC(lDepth, localZ, localX, otherX) + DAC(oHeight, otherY, localX, otherX) + DAC(oDepth, otherZ, localX, localX))
+	{
+		results = eSATResults::SAT_AXxBX;
+		planeAngle = glm::cross(otherX, localX);
+	}
+	else if (glm::dot(centers, glm::cross(localX, otherY)) > DAC(lHeight, localY, localX, otherY) + DAC(lDepth, localZ, localX, otherY) + DAC(oWidth, otherX, localX, otherY) + DAC(oDepth, otherZ, localX, otherY))
+	{
+		results = eSATResults::SAT_AXxBY;
+		planeAngle = glm::cross(localX, otherY);
+	}
+	else if (glm::dot(centers, glm::cross(localX, otherZ)) > DAC(lHeight, localY, localX, otherZ) + DAC(lDepth, localZ, localX, otherZ) + DAC(oWidth, otherX, localX, otherZ) + DAC(oHeight, otherY, localX, otherZ))
+	{
+		results = eSATResults::SAT_AXxBZ;
+		planeAngle = glm::cross(localX, otherZ);
+	}
+	else if (glm::dot(centers, glm::cross(localY, otherX)) > DAC(lWidth, localX, localY, otherX) + DAC(lDepth, localZ, localY, otherX) + DAC(oHeight, otherY, localY, otherX) + DAC(oDepth, otherZ, localY, otherX))
+	{
+		results = eSATResults::SAT_AYxBX;
+		planeAngle = glm::cross(localY, otherX);
+	}
+	else if (glm::dot(centers, glm::cross(localY, otherY)) > DAC(lWidth, localX, localY, otherY) + DAC(lDepth, localZ, localY, otherY) + DAC(oWidth, otherX, localY, otherY) + DAC(oDepth, otherZ, localY, otherY))
+	{
+		results = eSATResults::SAT_AYxBY;
+		planeAngle = glm::cross(localY, otherY);
+	}
+	else if (glm::dot(centers, glm::cross(localY, otherZ)) > DAC(lWidth, localX, localY, otherZ) + DAC(lDepth, localZ, localY, otherZ) + DAC(oWidth, otherX, localY, otherZ) + DAC(oHeight, otherY, localY, otherZ))
+	{
+		results = eSATResults::SAT_AYxBZ;
+		planeAngle = glm::cross(localY, otherZ);
+	}
+	else if (glm::dot(centers, glm::cross(localZ, otherX)) > DAC(lWidth, localX, localZ, otherX) + DAC(lHeight, localY, localZ, otherX) + DAC(oHeight, otherY, localZ, otherX) + DAC(oDepth, otherZ, localZ, otherX))
+	{
+		results = eSATResults::SAT_AZxBX;
+		planeAngle = glm::cross(localZ, otherX);
+	}
+	else if (glm::dot(centers, glm::cross(localZ, otherY)) > DAC(lWidth, localX, localZ, otherY) + DAC(lHeight, localY, localZ, otherY) + DAC(oWidth, otherX, localZ, otherY) + DAC(oDepth, otherZ, localZ, otherY))
+	{
+		results = eSATResults::SAT_AZxBY;
+		planeAngle = glm::cross(localZ, otherY);
+	}
+	else if (glm::dot(centers, glm::cross(localZ, otherZ)) > DAC(lWidth, localX, localZ, otherZ) + DAC(lHeight, localY, localZ, otherZ) + DAC(oWidth, otherX, localZ, otherZ) + DAC(oHeight, otherY, localZ, otherZ))
+	{
+		results = eSATResults::SAT_AZxBZ;
+		planeAngle = glm::cross(localZ, otherZ);
+	}
+	else
+	{
+		//there is no axis test that separates this two objects
+		results = eSATResults::SAT_NONE;
+	}
+
+	if (results != eSATResults::SAT_NONE)
+	{
+		// creates two planes so you can see it from behind to represent the axis of seperation,  The angles are correct for the first 6 tests, then it becomes perpendicular to the correct oreientation
+		m_pMeshMngr->AddPlaneToRenderList(glm::rotate(m_m4ToWorld, glm::radians(90.0f), planeAngle) * glm::scale(IDENTITY_M4, vector3(3, 3, 3)), planeColor);
+		m_pMeshMngr->AddPlaneToRenderList(glm::rotate(m_m4ToWorld, glm::radians(270.0f), planeAngle) * glm::scale(IDENTITY_M4, vector3(3, 3, 3)), planeColor);
+	}
+
+	return results;
 }
+
+// returns the absolute value of a cross product in a dot product multipled by a value
+float Simplex::MyRigidBody::DAC(float value, vector3 dot1, vector3 cross1, vector3 cross2)
+{
+	return glm::abs(value * glm::dot(dot1, glm::cross(cross1, cross2)));
+}
+
