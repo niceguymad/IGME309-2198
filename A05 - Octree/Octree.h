@@ -1,4 +1,4 @@
-#pragma once
+	#pragma once
 
 #include <vector>
 #include "MyEntityManager.h"
@@ -8,37 +8,88 @@ namespace Simplex
 {
 	class Octree
 	{
-	private:
-		static uint octantCount;
-		static uint maxLevel;
-		static uint idealEntityCount;
+		static uint m_uOctantCount;
+		static uint m_uMaxLevel;
+		static uint m_uIdealEntityCount;
 
-		uint ID = 0;
-		uint level = 0;
-		uint children = 0;
+		uint m_uID = 0;
+		uint m_uLevel = 0;
+		uint m_uChildren = 0;
 
-		float size = 0.0f;
+		float m_fSize = 0.0f;
 
-		MeshManager*   meshMngr = nullptr;
-		MyEntityManager* entitiyMngr = nullptr;
+		MeshManager* m_pMeshMngr = nullptr;
+		MyEntityManager* m_pEntitiyMngr = nullptr;
 
-		vector3 center = vector3(0);
-		vector3 min = vector3(0);
-		vector3 max = vector3(0);
+		vector3 m_vCenter = vector3(0);
+		vector3 m_vMin = vector3(0);
+		vector3 m_vMax = vector3(0);
 
-		Octree* parent = nullptr;
-		Octree* child[8];
+		Octree* m_pParent = nullptr;
+		Octree* m_pChild[8];
 
-		std::vector<uint> entityList;
+		std::vector<uint> m_EntityList;
 
-		Octree* root = nullptr;
-		std::vector<Octree*> nodes;
+		Octree* m_pRoot = nullptr;
+		std::vector<Octree*> m_lChild;
 
 	public:
 		Model* model;
 
 		Octree(uint octantLevels, uint maxSub); //construct octree
 		
-		void Display(uint octreeID); //display octree
+		Octree(vector3 a_v3Center, float a_fSize);
+
+		Octree(Octree const& other);
+
+		Octree& operator=(Octree const& other);
+
+		~Octree(void);
+
+		void Swap(Octree const& other);
+
+		float GetSize(void);
+
+		vector3 GetCenterGlobal(void);
+
+		vector3 GetMinGlobal(void);
+
+		vector3 GetMaxGlobal(void);
+
+		bool IsColliding(uint a_uRBIndex);
+
+		void Display(uint octreeID, vector3 color = C_YELLOW); //display octree
+
+		void Display(vector3 color = C_YELLOW);
+
+		void DisplayLeafs(uint octreeID, vector3 color = C_YELLOW);
+
+		void ClearEntitiyList(void);
+
+		void Subdivide(void);
+		
+		Octree* GetChild(uint a_nchild);
+
+		Octree* GetParent(void);
+
+		bool IsLeaf(void);
+
+		bool ContainsMoreThan(uint a_nEntities);
+
+		void KillBranches(void);
+
+		void ConstructTree(uint maxLevels = 3);
+
+		void AssignIDtoEntity(void);
+
+		uint GetOctantCount(void);
+
+	private:
+
+		void Release(void);
+
+		void Init(void);
+
+		void ConstructList(void);
 	};
 }
