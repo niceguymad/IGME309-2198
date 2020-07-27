@@ -46,7 +46,7 @@ namespace Simplex
 
 		~Octree(void);
 
-		void Swap(Octree const& other);
+		void Swap(Octree& other);
 
 		float GetSize(void);
 
@@ -62,7 +62,7 @@ namespace Simplex
 
 		void Display(vector3 color = C_YELLOW);
 
-		void DisplayLeafs(uint octreeID, vector3 color = C_YELLOW);
+		void DisplayLeafs(vector3 color = C_YELLOW);
 
 		void ClearEntitiyList(void);
 
@@ -78,7 +78,7 @@ namespace Simplex
 
 		void KillBranches(void);
 
-		void ConstructTree(uint maxLevels = 3);
+		void ConstructTree(uint maxLevel = 3);
 
 		void AssignIDtoEntity(void);
 
