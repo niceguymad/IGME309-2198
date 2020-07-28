@@ -31,7 +31,6 @@ void Application::InitVariables(void)
 	}
 
 	m_uOctantLevels = 1;
-	m_uOctantID = 0;
 	m_pRoot = new Octree(m_uOctantLevels, 5);
 	m_pEntityMngr->Update();
 }
@@ -58,12 +57,14 @@ void Application::Display(void)
 	ClearScreen();
 
 	//display octree
-	std::cout << m_uOctantID;
 	if(m_uOctantID == 0)
-		m_pRoot->Display();
-	else {
-		m_pRoot->Display(m_uOctantID);
+		m_pRoot->Display(); // Displays whole octree at ID 0
+	else 
+	{
+		m_pRoot->Display(m_uOctantID); // Shows specified octant after ID 0
 	}
+
+
 	m_pMeshMngr->AddCubeToRenderList(IDENTITY_M4, C_RED, RENDER_WIRE);
 	
 	// draw a skybox

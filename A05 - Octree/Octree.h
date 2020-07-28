@@ -1,13 +1,14 @@
-	#pragma once
+#pragma once
 
 #include <vector>
 #include "MyEntityManager.h"
-//#include "Simplex/Physics/Octant.h"
+//#include "Simplex/Physics/Octant.h" Used to base class off of
 
 namespace Simplex
 {
 	class Octree
 	{
+		//Octree Variables
 		static uint m_uOctantCount;
 		static uint m_uMaxLevel;
 		static uint m_uIdealEntityCount;
