@@ -21,6 +21,15 @@ void Application::InitVariables(void)
 	m_pSteve = new Model();
 	m_pSteve->Load("Minecraft\\Steve.obj");
 	m_pSteveRB= new MyRigidBody(m_pSteve->GetVertexList());
+
+	block = new Model();
+	block->Load("MineCraft\\Cube.obj");
+	blockRB = new MyRigidBody(block->GetVertexList());
+
+	//Making the aStar
+	aStar = new AStar(vector3(0, 0, 0), vector3(19, 19, 0));
+	aStar->GeneratePath();
+	path = aStar->fillPath();
 }
 void Application::Update(void)
 {
@@ -34,16 +43,36 @@ void Application::Update(void)
 	CameraRotation();
 
 	//Set model matrix to the creeper
-	matrix4 mCreeper = glm::translate(m_v3Creeper) * ToMatrix4(m_qCreeper) * ToMatrix4(m_qArcBall);
+	matrix4 mCreeper = glm::translate(vector3(aStar->getStart().x, 0.0f, aStar->getStart().y));
 	m_pCreeper->SetModelMatrix(mCreeper);
 	m_pCreeperRB->SetModelMatrix(mCreeper);
 	m_pMeshMngr->AddAxisToRenderList(mCreeper);
 	
 	//Set model matrix to Steve
-	matrix4 mSteve = glm::translate(vector3(2.25f, 0.0f, 0.0f)) * glm::rotate(IDENTITY_M4, glm::radians(-55.0f), AXIS_Z);
+	matrix4 mSteve = glm::translate(vector3(aStar->getEnd().x, 0.0f, aStar->getEnd().y));
 	m_pSteve->SetModelMatrix(mSteve);
 	m_pSteveRB->SetModelMatrix(mSteve);
 	m_pMeshMngr->AddAxisToRenderList(mSteve);
+	
+	// draws all the blocks that aren't obstacles
+	for (int i = 0; i < 20; i++) 
+	{
+		for (int j = 0; j < 20; j++)
+		{
+			if (aStar->grid[i][j].x != 99) 
+			{
+				matrix4 mBlock = glm::translate(vector3(i-.5f, -1, j-.5f)) * glm::scale(vector3(.99f,.99f,.99f));
+				// my attempt to draw the path 
+				if (aStar->closed[i][j] == false)
+				{
+					m_pMeshMngr->AddWireCubeToRenderList(mBlock * glm::translate(vector3(1, 1.0f, 1)), C_GREEN);
+				}
+				block->SetModelMatrix(mBlock);
+				block->AddToRenderList();
+			}
+
+		}
+	}
 	
 	bool bColliding = m_pCreeperRB->IsColliding(m_pSteveRB);
 	
@@ -65,7 +94,7 @@ void Application::Display(void)
 	ClearScreen();
 
 	//Add grid to the scene
-	m_pMeshMngr->AddGridToRenderList();
+	//m_pMeshMngr->AddGridToRenderList();
 
 	//Add skybox
 	m_pMeshMngr->AddSkyboxToRenderList();

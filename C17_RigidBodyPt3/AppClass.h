@@ -11,6 +11,9 @@ Date: 2017/05
 #include "imgui\ImGuiObject.h"
 
 #include "MyRigidBody.h"
+//Include AStar Class
+#include "AStar.h"
+#include <vector>
 namespace Simplex
 {
 
@@ -19,13 +22,18 @@ class Application
 	vector3 m_v3Creeper; //position of the creeper
 	Model* m_pCreeper = nullptr; //model to display
 	Model* m_pSteve = nullptr; //model to display
+	Model* block = nullptr;
 
 	quaternion m_qCreeper; //quaternion for the creeper
 
 	MyRigidBody* m_pCreeperRB = nullptr; //Rigid Body of the model
 	MyRigidBody* m_pSteveRB = nullptr; //Rigid Body of the model
+	MyRigidBody* blockRB = nullptr;
 	
-	String m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu"; //programmer
+	String m_sProgrammer = "Jared Baker - jdb3959@rit.edu"; //programmer
+
+	AStar* aStar = nullptr;
+	std::vector<vector3> path;
 
 private:
 	static ImGuiObject gui; //GUI object

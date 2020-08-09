@@ -75,6 +75,19 @@ void Application::ProcessKeyPressed(sf::Event a_event)
 	case sf::Keyboard::RShift:
 		m_bModifier = true;
 		break;
+	//controls to move the end point
+	case sf::Keyboard::Up:
+		aStar->SetEnd(vector3(aStar->getEnd().x, aStar->getEnd().y - 1, aStar->getEnd().z));
+		break;
+	case sf::Keyboard::Right:
+		aStar->SetEnd(vector3(aStar->getEnd().x + 1, aStar->getEnd().y, aStar->getEnd().z));
+		break;
+	case sf::Keyboard::Left:
+		aStar->SetEnd(vector3(aStar->getEnd().x - 1, aStar->getEnd().y, aStar->getEnd().z));
+		break;
+	case sf::Keyboard::Down:
+		aStar->SetEnd(vector3(aStar->getEnd().x, aStar->getEnd().y + 1, aStar->getEnd().z));
+		break;
 	}
 	//gui
 	gui.io.KeysDown[a_event.key.code] = true;
